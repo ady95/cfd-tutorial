@@ -11,12 +11,23 @@
 | 항목 | 버전 |
 |---|---|
 | OS | Ubuntu 22.04 (Windows는 WSL2 Ubuntu) |
-| OpenFOAM | Foundation 판 14 (확정 예정) |
-| Python | 확정 예정 |
-| PyTorch | 확정 예정 |
-| GPU | NVIDIA RTX 3090 24GB (CPU만으로 실행 가능한 장은 각 장 README에 표시) |
+| OpenFOAM | Foundation 판 14 (apt 패키지 openfoam14 20261008) |
+| Python | 3.12 (uv 0.13로 설치·관리) |
+| PyTorch | 2.14.1 (CUDA 13.0 빌드) |
+| GPU | NVIDIA RTX 3090 24GB, 드라이버 580 (CPU만으로 실행 가능한 장은 각 장 README에 표시) |
 
-정확한 패키지 버전은 [environment](environment) 폴더에 고정합니다. 책의 각 페이지 상단에도 그 페이지를 실행한 버전을 적습니다.
+Python 패키지 버전은 `pyproject.toml`과 `uv.lock`으로 고정합니다. 책의 각 페이지 상단에도 그 페이지를 실행한 버전을 적습니다.
+
+## 빠른 시작
+
+```bash
+git clone https://github.com/ady95/cfd-tutorial.git
+cd cfd-tutorial
+uv sync        # .python-version(3.12)과 uv.lock 그대로 설치
+uv run python -c "import torch; print(torch.cuda.is_available())"
+```
+
+설치 과정과 문제 해결은 책 02-1과 [environment](environment) 폴더를 참고하세요.
 
 ## 실습 폴더
 
