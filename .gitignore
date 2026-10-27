@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# OpenFOAM 실행 산출물 (케이스 원본은 0/ constant/ system/ 만 커밋)
+processor*/
+postProcessing/
+log.*
+*.foam
+**/constant/polyMesh/
+
+# 생성 데이터·모델 (재생성 스크립트로 만든다)
+runs/
+data/raw/
+*.parquet
+*.pt
+*.ckpt
+mlruns/
+optuna*.db
+
+# 에디터·OS
+.vscode/
+.DS_Store
+Thumbs.db
+.env
