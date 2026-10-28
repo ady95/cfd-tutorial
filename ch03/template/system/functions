@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \    /   O peration     | Website:  https://openfoam.org
+    \  /    A nd           | Version:  14
+     \/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      functions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// 온도 T 를 유동 위에 실어 나른다 (물성 일정, 부력 없음)
+// 열확산계수 = k / (rho cp) = 0.6 / (998 x 4182) [m2/s]
+#includeFunc scalarTransport(T, diffusivity=constant, D=1.4376e-07)
+
+// 반복마다 기록: 입구 평균 압력, 출구 혼합 평균 온도, 가열면 최고·평균 온도
+#includeFunc patchAverage(patch=inlet, fields=(p))
+#includeFunc patchAverage
+(
+    funcName=outletT,
+    patch=outlet,
+    fields=(T),
+    operation=average,
+    weightField=phi
+)
+#includeFunc patchAverage
+(
+    funcName=wallTmax,
+    patch=heatedWall,
+    fields=(T),
+    operation=max
+)
+#includeFunc patchAverage(funcName=wallTavg, patch=heatedWall, fields=(T))
+
+// ************************************************************************* //

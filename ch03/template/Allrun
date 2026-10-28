@@ -1,0 +1,9 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # 이 스크립트가 있는 폴더에서 실행
+
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# system/blockMeshDict 는 ch03/channel_mesh.py 로 먼저 만든다
+runApplication blockMesh
+runApplication checkMesh
+runApplication foamRun
