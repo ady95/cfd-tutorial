@@ -18,6 +18,8 @@ data/raw/
 # 책 04-5 데이터셋은 해석 없이 5장을 따라 하도록 커밋한다
 !data/cooling_v1/*.parquet
 *.pt
+# 책 05-5 최종 대리모델은 6장을 바로 따라 하도록 커밋한다
+!models/surrogate_v1/*.pt
 *.ckpt
 mlruns/
 optuna*.db
