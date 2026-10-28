@@ -19,6 +19,9 @@ OpenFOAM 14와 bash 환경이 필요합니다(책 02-1). GPU는 쓰지 않습니
 | run_case.py | 03-4 | 변수 하나로 복사·치환·격자·해석·추출을 한 번에, 실패도 기록 |
 | run_cases.py | 03-4 | 변수 CSV를 차례로 해석하고 results.csv로 정리 |
 | demo_cases.csv | 03-4 | 정상·미수렴·실패가 섞인 변수 4개 |
+| env_info.py | 03-5 | OS·CPU·OpenFOAM·Python·저장소 커밋 기록 (run_cases.py가 env.json으로 저장) |
+| repro_check.sh | 03-5 | 같은 조건 반복과 코어 수(1·2·4·6)에 따른 결과 비교 |
+| grid_check.py | 03-5 | 형상·유속 5개 × 격자 3개(높이 15·30·60칸) 격자 독립성 검사 |
 
 ```bash
 cp -r ch03/template ~/cfd-runs/rib-base
@@ -35,4 +38,7 @@ uv run python ch03/extract.py ~/cfd-runs/rib-base
 bash ch03/extract_check.sh                 # ~/cfd-runs/extract
 uv run python ch03/run_case.py 2 0.6 8 0.1 # ~/cfd-runs/auto
 uv run python ch03/run_cases.py ch03/demo_cases.csv ~/cfd-runs/demo
+uv run python ch03/env_info.py
+bash ch03/repro_check.sh                   # ~/cfd-runs/repro
+uv run python ch03/grid_check.py           # ~/cfd-runs/gridrib (약 10분)
 ```
