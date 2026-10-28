@@ -37,4 +37,27 @@ FoamFile
 )
 #includeFunc patchAverage(funcName=wallTavg, patch=heatedWall, fields=(T))
 
+// 압력손실: 입구에서 5 mm 들어간 단면의 평균 압력 (출구 압력은 0)
+// 입구 면은 모서리 특이점 때문에 격자에 따라 값이 계속 변해 피한다 (책 03-3)
+pSection
+{
+    type            surfaceFieldValue;
+    libs            ("libfieldFunctionObjects.so");
+    writeControl    timeStep;
+    writeInterval   1;
+    writeFields     false;
+    sampledSurface
+    {
+        type        cutPlane;
+        point       (0.005 0 0);
+        normal      (1 0 0);
+        interpolate false;
+    }
+    operation       areaAverage;
+    fields          (p);
+}
+
+// 출구 체적 유량 [m3/s] (에너지 수지 검증용)
+#includeFunc patchFlowRate(funcName=flowRate, patch=outlet)
+
 // ************************************************************************* //

@@ -14,6 +14,8 @@ OpenFOAM 14와 bash 환경이 필요합니다(책 02-1). GPU는 쓰지 않습니
 | plot_mesh.py | 03-1 | 첫 번째 리브 부근 격자 그림 |
 | plot_fields.py | 03-2 | 속도 크기·온도 분포 그림 (x = 8~40 mm) |
 | condition_check.sh | 03-2 | 열유속·입구 온도·유속을 바꾼 해석 5개 비교 |
+| extract.py | 03-3 | 압력손실·온도 상승 추출과 에너지 수지 계산 |
+| extract_check.sh | 03-3 | 범위 끝 형상·유속 5개 해석과 에너지 수지 검증 |
 
 ```bash
 cp -r ch03/template ~/cfd-runs/rib-base
@@ -26,4 +28,6 @@ uv run python ch03/plot_mesh.py ~/cfd-runs/rib-check/H2_e0.6_N8
 ~/cfd-runs/rib-base/Allrun                  # 기준 형상 해석 (약 5초)
 uv run python ch03/plot_fields.py ~/cfd-runs/rib-base
 bash ch03/condition_check.sh               # ~/cfd-runs/cond
+uv run python ch03/extract.py ~/cfd-runs/rib-base
+bash ch03/extract_check.sh                 # ~/cfd-runs/extract
 ```
