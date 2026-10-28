@@ -84,5 +84,5 @@ EOF
         decomposePar > log.decomposePar 2>&1
         mpirun -np "$np" foamRun -parallel > log.foamRun 2>&1
     fi
-    summary "$label" "$CASE""$(echo "$(date +%s.%N) - $s" | bc)"
+    summary "$label" "$CASE" "$(echo "$(date +%s.%N) - $s" | bc)"
 done
