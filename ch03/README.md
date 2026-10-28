@@ -16,6 +16,9 @@ OpenFOAM 14와 bash 환경이 필요합니다(책 02-1). GPU는 쓰지 않습니
 | condition_check.sh | 03-2 | 열유속·입구 온도·유속을 바꾼 해석 5개 비교 |
 | extract.py | 03-3 | 압력손실·온도 상승 추출과 에너지 수지 계산 |
 | extract_check.sh | 03-3 | 범위 끝 형상·유속 5개 해석과 에너지 수지 검증 |
+| run_case.py | 03-4 | 변수 하나로 복사·치환·격자·해석·추출을 한 번에, 실패도 기록 |
+| run_cases.py | 03-4 | 변수 CSV를 차례로 해석하고 results.csv로 정리 |
+| demo_cases.csv | 03-4 | 정상·미수렴·실패가 섞인 변수 4개 |
 
 ```bash
 cp -r ch03/template ~/cfd-runs/rib-base
@@ -30,4 +33,6 @@ uv run python ch03/plot_fields.py ~/cfd-runs/rib-base
 bash ch03/condition_check.sh               # ~/cfd-runs/cond
 uv run python ch03/extract.py ~/cfd-runs/rib-base
 bash ch03/extract_check.sh                 # ~/cfd-runs/extract
+uv run python ch03/run_case.py 2 0.6 8 0.1 # ~/cfd-runs/auto
+uv run python ch03/run_cases.py ch03/demo_cases.csv ~/cfd-runs/demo
 ```
