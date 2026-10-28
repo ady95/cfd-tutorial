@@ -10,6 +10,8 @@ OpenFOAM 14와 bash 환경이 필요합니다(책 02-1). GPU는 쓰지 않습니
 | check_channel.py | 02-3 | channel2d 결과를 층류 이론해와 비교 |
 | plot_channel.py | 02-4 | PyVista로 channel2d 속도장·단면 속도 분포 그림 |
 | pv_pitzdaily.py | 02-4 | ParaView(pvbatch)로 pitzDailySteady 속도장 그림 |
+| grid_run.sh | 02-5 | channel2d를 격자 네 개(ny 10·20·40·80)로 해석 |
+| check_grid.py | 02-5 | 격자별 이론해 오차·압력손실 변화율·관찰 차수 비교와 그림 |
 
 ```bash
 uv run python ch02/inlet_turbulence.py
@@ -19,6 +21,9 @@ cp -r ch02/channel2d ~/cfd-runs/channel2d
 ~/cfd-runs/channel2d/Allrun
 uv run python ch02/check_channel.py ~/cfd-runs/channel2d
 uv run python ch02/plot_channel.py ~/cfd-runs/channel2d
+
+bash ch02/grid_run.sh ~/cfd-runs/grid        # 약 1분 (CPU 코어 하나)
+uv run python ch02/check_grid.py ~/cfd-runs/grid
 
 # Ubuntu 22.04 apt ParaView 5.10: 모듈 경로 지정 필요, 화면 없는 서버는 xvfb-run
 export PYTHONPATH=/usr/lib/python3/dist-packages
