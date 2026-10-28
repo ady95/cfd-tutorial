@@ -7,7 +7,8 @@
 
 사용법: uv run python ch04/run_batch.py [작업 폴더] [--workers 6]
                                           [--split train,val] [--limit 24]
-    작업 폴더 기본값 ~/cfd-runs/dataset
+                                          [--samples 목록.csv]
+    작업 폴더 기본값 ~/cfd-runs/dataset, 샘플 목록 기본값 ch04/samples.csv
 """
 import argparse
 import csv
@@ -42,6 +43,8 @@ def main():
     ap.add_argument("--workers", type=int, default=6, help="동시 해석 수")
     ap.add_argument("--split", default="", help="예: train,val (기본 전체)")
     ap.add_argument("--limit", type=int, default=0, help="앞에서 n개만")
+    ap.add_argument("--samples", default=HERE / "samples.csv",
+                    help="샘플 목록 CSV (06-2에서 씀)")
     args = ap.parse_args()
     if shutil.which("foamRun") is None:
         sys.exit("OpenFOAM 환경이 없습니다: . /opt/openfoam14/etc/bashrc")
@@ -51,7 +54,7 @@ def main():
     changed = record_env(run_dir)
     if changed:
         print("주의: 처음 실행할 때와 환경이 다릅니다:", ", ".join(changed))
-    with open(HERE / "samples.csv", newline="") as f:
+    with open(args.samples, newline="") as f:
         samples = list(csv.DictReader(f))
     if args.split:
         samples = [s for s in samples if s["split"] in args.split.split(",")]

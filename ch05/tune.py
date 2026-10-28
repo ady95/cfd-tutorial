@@ -27,6 +27,9 @@ from torch import nn
 from data import (DATA, INPUTS, TARGETS, Scaler, from_model, load,
                   rel_error, to_model)
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ch04"))
+from make_samples import RANGES     # noqa: E402  학습 범위 (04-2)
+
 matplotlib.use("Agg")       # 화면 없이 PNG로만 저장
 import matplotlib.pyplot as plt  # noqa: E402
 
@@ -146,7 +149,7 @@ out_model.mkdir(parents=True, exist_ok=True)
 torch.save(model.state_dict(), out_model / "mlp.pt")
 meta = {"model": "MLP", "chosen": name, "config": cfg,
         "epochs": FINAL_EPOCHS, "inputs": INPUTS, "targets": TARGETS,
-        "log_targets": ["dp"],
+        "log_targets": ["dp"], "input_range": RANGES,
         "x_scaler": {"mean": sx.mean.tolist(), "std": sx.std.tolist()},
         "z_scaler": {"mean": sz.mean.tolist(), "std": sz.std.tolist()},
         "val_mean_rel_error_pct": {t: round(e[t][0], 4) for t in TARGETS},
