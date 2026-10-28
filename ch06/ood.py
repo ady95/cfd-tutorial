@@ -33,13 +33,13 @@ def width(s):
 
 # 1) 범위 안과 밖의 상대 오차
 print("평균 상대 오차 [%] dp/dT_max/dT_avg (괄호는 세 출력 중 최대)")
-print("모델      " + "".join(f"{s:<23}" for s in data))
+print("모델      " + "".join(f"{s:<23}" for s in data).rstrip())
 for name, f in models.items():
     line = name + " " * (10 - width(name))
     for x, y, _ in data.values():
         m = metrics(y, f(x))
         cell = "/".join(f"{v['rel_mean']:.2f}" for v in m.values())
-        cell += f" ({max(v['rel_max'] for v in m.values()):.1f})"
+        cell += f" ({max(v['rel_max'] for v in m.values()):.3g})"
         line += f"{cell:<23}"
     print(line.rstrip())
 

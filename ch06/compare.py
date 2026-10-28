@@ -9,7 +9,7 @@
    오차의 구간 평균을 그림으로 남긴다.
 
 사용법: uv run python ch06/compare.py [출력 폴더]   (기본 ~/cfd-runs/ch06)
-        CPU 6코어 기준 약 1분
+        CPU 6코어 기준 약 1분 20초
 결과:   표 출력과 출력 폴더의 error-by-input.png
 """
 import sys

@@ -41,7 +41,7 @@ def in_units(m):
 
 
 # 2) 최종 MLP의 val과 test
-print("\n최종 MLP     MAE         RMSE        R²          평균 상대  최대 상대")
+print("\n최종 MLP     MAE        RMSE       R²          평균 상대 최대 상대")
 for split, x, y in [("val", x_va, y_va), ("test", x_te, y_te)]:
     m = in_units(metrics(y, mlp(x)))
     for t in TARGETS:
@@ -54,11 +54,13 @@ for split, x, y in [("val", x_va, y_va), ("test", x_te, y_te)]:
 p = mlp(x_te)[:, 0]
 dp = y_te[:, 0]
 small, large = dp < np.quantile(dp, 1 / 3), dp > np.quantile(dp, 2 / 3)
-print("\ntest 압력손실   범위 [Pa]      MAE [Pa]   평균 상대 오차")
+print("\ntest dp    범위 [Pa]       MAE [Pa]   평균 상대 오차")
 for name, k in [("작은 1/3", small), ("큰 1/3", large)]:
     ae = np.abs(p[k] - dp[k]) * RHO
-    print(f"{name:<9}  {dp[k].min() * RHO:5.1f}~{dp[k].max() * RHO:5.1f}"
-          f"     {ae.mean():.4f}     {(ae / (dp[k] * RHO)).mean() * 100:.3f}%")
+    pad = 11 - sum(2 if ord(c) > 0x1100 else 1 for c in name)
+    lo, hi = dp[k].min() * RHO, dp[k].max() * RHO
+    print(name + " " * pad + f"{lo:5.1f}~{hi:5.1f}     {ae.mean():.4f}     "
+          f"{(ae / (dp[k] * RHO)).mean() * 100:.3f}%")
 
 # 4) 모델별 R²와 상대 오차 (test, 최고 온도 상승)
 print("\ntest dT_max   R²          RMSE [K]   평균 상대 오차")

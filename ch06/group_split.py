@@ -48,11 +48,13 @@ def compare(title, x, y, splits):
             for te in folds]
     with ProcessPoolExecutor(6) as pool:
         preds = iter(list(pool.map(run_fold, jobs)))
-    print(f"\n[{title}] 데이터 {len(x)}개, 빼 두는 묶음: " + ", ".join(
-        f"{k} {min(map(len, v))}~{max(map(len, v))}개"
-        for k, v in splits.items()))
+    print(f"\n[{title}] 데이터 {len(x)}개")
+    for k, v in splits.items():
+        print(f"  {k}: {len(v)}번 학습, 빼 두는 묶음 "
+              f"{min(map(len, v))}~{max(map(len, v))}개")
     print("평균 상대 오차 [%] dp/dT_max/dT_avg (괄호는 세 출력 중 최대)")
-    print("모델      " + "".join(k + " " * (22 - width(k)) for k in splits))
+    print(("모델      " + "".join(k + " " * (22 - width(k))
+                                 for k in splits)).rstrip())
     for model in MODELS:
         line = model + " " * (10 - width(model))
         for folds in splits.values():
