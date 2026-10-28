@@ -41,12 +41,13 @@ def extract(case):
     return {
         "converged": converged,
         "iterations": it,
-        "dp": dp,                   # 운동학적 압력 [m2/s2]
-        "dp_pa": dp * RHO,          # 압력 [Pa]
-        "dT_out": t_out - T_IN,
-        "dT_out_energy": dt_energy,
-        "dT_max": t_max - T_IN,
-        "dT_avg": t_avg - T_IN,
+        "dp": dp,                     # 운동학적 압력 [m2/s2]
+        "dp_pa": round(dp * RHO, 3),  # 압력 [Pa]
+        # 기록 파일이 유효숫자 7자리라 온도 상승은 소수 넷째 자리까지만 쓴다
+        "dT_out": round(t_out - T_IN, 4),
+        "dT_out_energy": round(dt_energy, 4),
+        "dT_max": round(t_max - T_IN, 4),
+        "dT_avg": round(t_avg - T_IN, 4),
     }
 
 
