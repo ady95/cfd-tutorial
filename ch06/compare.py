@@ -83,7 +83,7 @@ for name, fit in FITS.items():
           f"{te_max:8.1f}% {u:10.2f}% {h:10.2f}% {t_one * 1e3:7.2f}ms")
 
 # 3) 오차가 큰 케이스는 어디에 있나
-print(f"\n범위 안 {len(df)}개 out-of-fold 평균 상대 오차: " + ", ".join(
+print(f"\nout-of-fold {len(df)}개 평균 상대 오차: " + ", ".join(
     f"{t} {e:.3f}%" for t, e in zip(TARGETS, err.mean(axis=0))))
 top = df[df["err"] >= df["err"].quantile(0.9)]
 print(f"\n오차 상위 10% ({len(top)}개, 세 출력 중 최대 오차 "
