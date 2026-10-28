@@ -71,8 +71,7 @@ def main(out):
     assert len(names) == len(samples), "반올림 뒤 겹치는 조합이 있음"
 
     with open(out, "w", newline="") as f:
-        w = csv.writer(f, lineterminator="
-")
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["id", "split", "H", "e", "N", "U", "e_ratio"])
         for i, (s, H, e, N, U) in enumerate(samples):
             w.writerow([i, s, H, e, N, U, round(e / H, 4)])
