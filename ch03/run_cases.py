@@ -8,12 +8,11 @@
 env.json에 남긴다 (책 03-5).
 """
 import csv
-import json
 import shutil
 import sys
 from pathlib import Path
 
-from env_info import env_info
+from env_info import record_env
 from run_case import run_case
 
 COLUMNS = ["case", "H", "e", "N", "U", "status", "error", "cells",
@@ -24,15 +23,9 @@ COLUMNS = ["case", "H", "e", "N", "U", "status", "error", "cells",
 def main(param_csv, run_dir):
     run_dir = Path(run_dir).expanduser()
     run_dir.mkdir(parents=True, exist_ok=True)
-    env, env_file = env_info(), run_dir / "env.json"
-    if env_file.exists():           # 이어 돌릴 때 환경이 바뀌었으면 알린다
-        old = json.loads(env_file.read_text())
-        changed = [k for k in ("openfoam", "repo_commit", "repo_modified")
-                   if old.get(k) != env[k]]
-        if changed:
-            print("주의: 처음 실행할 때와 환경이 다릅니다:", ", ".join(changed))
-    else:
-        env_file.write_text(json.dumps(env, ensure_ascii=False, indent=2))
+    changed = record_env(run_dir)   # 이어 돌릴 때 환경이 바뀌었으면 알린다
+    if changed:
+        print("주의: 처음 실행할 때와 환경이 다릅니다:", ", ".join(changed))
     with open(param_csv, newline="") as f:
         params = list(csv.DictReader(f))
 

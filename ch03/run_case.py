@@ -11,6 +11,7 @@ OpenFOAM 환경을 불러온 bash에서 실행한다 (책 02-1).
 """
 import json
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -35,6 +36,8 @@ def run(cmd, case, name):
                                stderr=subprocess.STDOUT, timeout=TIMEOUT)
         except subprocess.TimeoutExpired:
             raise RuntimeError(f"{name} 시간 초과 ({TIMEOUT}초)")
+    if p.returncode in (-signal.SIGINT, -signal.SIGTERM):
+        raise InterruptedError(f"{name} 중단됨")    # Ctrl+C 등 사용자 중단
     if p.returncode != 0:
         raise RuntimeError(f"{name} 실패 (종료 코드 {p.returncode})")
 
@@ -67,6 +70,8 @@ def run_case(H, e, N, U, run_dir):
         # 3) 결과 추출 (책 03-3)
         record.update(extract(case))
         record["status"] = "ok" if record["converged"] else "not_converged"
+    except InterruptedError:        # 사용자가 멈춘 것은 실패가 아니므로
+        raise                       # result.json을 남기지 않는다 (책 04-3)
     except Exception as err:        # 실패해도 기록만 하고 다음으로 넘어간다
         record["status"] = "failed"
         record["error"] = str(err)
