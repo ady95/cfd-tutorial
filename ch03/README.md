@@ -12,6 +12,8 @@ OpenFOAM 14와 bash 환경이 필요합니다(책 02-1). GPU는 쓰지 않습니
 | channel_mesh.py | 03-1 | H, e, N으로 blockMeshDict 생성 |
 | mesh_check.sh | 03-1 | 변수 범위 양 끝 형상 5개의 격자 생성·검사 |
 | plot_mesh.py | 03-1 | 첫 번째 리브 부근 격자 그림 |
+| plot_fields.py | 03-2 | 속도 크기·온도 분포 그림 (x = 8~40 mm) |
+| condition_check.sh | 03-2 | 열유속·입구 온도·유속을 바꾼 해석 5개 비교 |
 
 ```bash
 cp -r ch03/template ~/cfd-runs/rib-base
@@ -20,4 +22,8 @@ uv run python ch03/channel_mesh.py 2 0.6 8 \
 
 bash ch03/mesh_check.sh                     # ~/cfd-runs/rib-check
 uv run python ch03/plot_mesh.py ~/cfd-runs/rib-check/H2_e0.6_N8
+
+~/cfd-runs/rib-base/Allrun                  # 기준 형상 해석 (약 5초)
+uv run python ch03/plot_fields.py ~/cfd-runs/rib-base
+bash ch03/condition_check.sh               # ~/cfd-runs/cond
 ```
