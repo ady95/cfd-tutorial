@@ -29,7 +29,7 @@ def main(param_csv, run_dir):
         r = run_case(float(p["H"]), float(p["e"]), int(p["N"]),
                      float(p["U"]), run_dir)
         records.append(r)
-        print(f"[{i}/{len(params)}] {r['case']:<22} {r['status']:<13}"
+        print(f"[{i}/{len(params)}] {r['case']:<19} {r['status']:<13}"
               f" {r['seconds']:6.1f}초  {r['error'] or ''}", flush=True)
         with open(run_dir / "results.csv", "w", newline="") as f:
             w = csv.DictWriter(f, COLUMNS, extrasaction="ignore")
