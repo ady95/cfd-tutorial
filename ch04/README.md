@@ -9,9 +9,13 @@
 | make_samples.py | 04-2 | 설계 변수 샘플 목록 생성 (범위 안 600 + 범위 밖 100, 시드 2026) |
 | samples.csv | 04-2 | make_samples.py 결과. id, split, H, e, N, U, e_ratio |
 | run_batch.py | 04-3 | samples.csv를 동시에 여러 개 해석 (기본 6개), 중단 후 이어 돌리기 |
+| check_cases.py | 04-4 | 학습 사용 여부 자동 판정, 미수렴 흔들림, 반복 상한 비교, 실패 패턴 그림 |
+| rerun_slow.py | 04-4 | 값이 안정된 미수렴 케이스만 반복 상한 20000으로 재해석 |
 
 ```bash
 uv run python ch04/sampling_compare.py      # ~/cfd-runs/sampling
 uv run python ch04/make_samples.py          # ch04/samples.csv 다시 만들기
 uv run python ch04/run_batch.py             # ~/cfd-runs/dataset (700개)
+uv run python ch04/check_cases.py
+uv run python ch04/rerun_slow.py            # ~/cfd-runs/dataset/rerun
 ```
