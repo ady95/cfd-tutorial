@@ -15,6 +15,8 @@ log.*
 runs/
 data/raw/
 *.parquet
+# 책 04-5 데이터셋은 해석 없이 5장을 따라 하도록 커밋한다
+!data/cooling_v1/*.parquet
 *.pt
 *.ckpt
 mlruns/
