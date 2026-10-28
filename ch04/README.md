@@ -11,6 +11,7 @@
 | run_batch.py | 04-3 | samples.csv를 동시에 여러 개 해석 (기본 6개), 중단 후 이어 돌리기 |
 | check_cases.py | 04-4 | 학습 사용 여부 자동 판정, 미수렴 흔들림, 반복 상한 비교, 실패 패턴 그림 |
 | rerun_slow.py | 04-4 | 값이 안정된 미수렴 케이스만 반복 상한 20000으로 재해석 |
+| build_dataset.py | 04-5 | 판정·재해석을 반영해 data/cooling_v1에 Parquet·CSV·meta.json 저장 |
 
 ```bash
 uv run python ch04/sampling_compare.py      # ~/cfd-runs/sampling
@@ -18,4 +19,9 @@ uv run python ch04/make_samples.py          # ch04/samples.csv 다시 만들기
 uv run python ch04/run_batch.py             # ~/cfd-runs/dataset (700개)
 uv run python ch04/check_cases.py
 uv run python ch04/rerun_slow.py            # ~/cfd-runs/dataset/rerun
+uv run python ch04/build_dataset.py         # data/cooling_v1
 ```
+
+해석을 다시 돌리지 않아도 5장부터 따라 할 수 있도록, 결과 데이터셋
+data/cooling_v1(700행)을 저장소에 넣어 두었습니다. 만든 환경과 파일 지문은
+data/cooling_v1/meta.json에 있습니다.

@@ -1,0 +1,59 @@
+{
+  "version": "cooling_v1",
+  "description": "2D 리브 냉각 채널 OpenFOAM 해석 결과 (책 4장)",
+  "rows": 700,
+  "valid_rows": {
+    "train": 418,
+    "val": 89,
+    "test": 90,
+    "ood_U": 46,
+    "ood_H": 47
+  },
+  "columns": {
+    "inputs": {
+      "H": "채널 높이 [mm]",
+      "e": "리브 높이 [mm]",
+      "e_ratio": "리브 높이 비율 e/H",
+      "N": "리브 개수",
+      "U": "입구 유속 [m/s]"
+    },
+    "outputs": {
+      "dp": "압력손실, x=5mm 단면 평균 운동학적 압력 [m2/s2]",
+      "dT_max": "가열면 최고 온도 상승 [K]",
+      "dT_avg": "가열면 평균 온도 상승 [K]"
+    },
+    "meta": {
+      "id": "샘플 번호 (samples.csv)",
+      "split": "train/val/test/ood_U/ood_H",
+      "case": "케이스 폴더 이름",
+      "valid": "학습에 써도 되는지 (04-4 판정)",
+      "reason": "valid가 False인 이유",
+      "status": "ok/not_converged/failed",
+      "rerun": "반복 상한을 늘려 다시 해석한 결과인지",
+      "iterations": "수렴까지 반복 수",
+      "seconds": "케이스 해석 시간 [초]",
+      "cells": "격자 셀 수",
+      "dp_pa": "압력손실 [Pa] (dp x 998)",
+      "dT_out": "출구 온도 상승 [K] (검증용)",
+      "dT_out_energy": "에너지 수지로 계산한 출구 온도 상승 [K]"
+    }
+  },
+  "fixed_conditions": {
+    "q": "10 kW/m2",
+    "T_in": "20 C",
+    "cells_height": 30
+  },
+  "simulation_env": {
+    "os": "Ubuntu 22.04.5 LTS",
+    "cpu": "Intel(R) Core(TM) i7-5820K CPU @ 3.30GHz",
+    "cpu_count": 12,
+    "openfoam": "14-a4867fc914c1",
+    "python": "3.12.15",
+    "repo_commit": "81f1a8b",
+    "repo_modified": false
+  },
+  "sha256": {
+    "cases.parquet": "08774004a054a5e9927e34962525d751e1eeadc4cfa1d1625c54134559722379",
+    "cases.csv": "d9892b9045cc43df7eaab56e864aa536a8ce79c853eb957c553c235a71a087dd"
+  }
+}
