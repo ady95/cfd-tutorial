@@ -11,6 +11,12 @@
 | Python | 3.12 | 02 |
 | torch | 2.14.1 (cu130) | 02 |
 | numpy | 2.5.4 | 02 |
+| pyvista | 0.49.1 (vtk 9.7.1) | 02 |
+| matplotlib | 3.11.2 | 02 |
+
+### 화면 없는 서버에서 그림 만들기
+
+PyPI의 vtk 9.7.1 휠은 화면(X 디스플레이)이 없으면 EGL로 렌더링합니다. NVIDIA 드라이버가 있는 서버라면 추가 설치 없이 PyVista로 PNG를 만들 수 있습니다. 이때 출력되는 `bad X server connection` 경고는 무시해도 됩니다.
 
 ### GPU 드라이버와 PyTorch CUDA 빌드
 
