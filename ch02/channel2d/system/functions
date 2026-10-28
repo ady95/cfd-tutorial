@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \    /   O peration     | Website:  https://openfoam.org
+    \  /    A nd           | Version:  14
+     \/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      functions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// 반복마다 입구 평균 압력을 기록 (출구 p = 0이므로 입출구 압력차와 같다)
+#includeFunc patchAverage(patch=inlet, fields=(p))
+
+// 출구 근처(x = 95 mm) 단면의 속도 분포
+#includeFunc graphUniform
+(
+    funcName=outletProfile,
+    start=(0.095 0 0.00005),
+    end=(0.095 0.002 0.00005),
+    nPoints=41,
+    fields=(U),
+    axis=y
+)
+
+// 채널 중심선(y = 1 mm)을 따라 속도와 압력
+#includeFunc graphUniform
+(
+    funcName=centerline,
+    start=(0 0.001 0.00005),
+    end=(0.1 0.001 0.00005),
+    nPoints=201,
+    fields=(U p),
+    axis=x
+)
+
+// ************************************************************************* //

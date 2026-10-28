@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \    /   O peration     | Website:  https://openfoam.org
+    \  /    A nd           | Version:  14
+     \/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// 2D 평행 평판 채널: 길이 L = 100 mm, 높이 H = 2 mm
+// z 방향은 셀 1개 + empty 경계로 2D 해석
+
+units [mm];
+
+L   100;
+H   2;
+W   0.1;    // z 두께 (2D라 결과에 영향 없음)
+
+nx  200;    // 길이 방향 셀 수 (셀 길이 0.5 mm)
+ny  20;     // 높이 방향 셀 수 (셀 높이 0.1 mm)
+
+vertices
+(
+    (0  0  0)
+    ($L 0  0)
+    ($L $H 0)
+    (0  $H 0)
+    (0  0  $W)
+    ($L 0  $W)
+    ($L $H $W)
+    (0  $H $W)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) ($nx $ny 1) simpleGrading (1 1 1)
+);
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        faces ((0 4 7 3));
+    }
+    outlet
+    {
+        type patch;
+        faces ((1 2 6 5));
+    }
+    lowerWall
+    {
+        type wall;
+        faces ((0 1 5 4));
+    }
+    upperWall
+    {
+        type wall;
+        faces ((3 7 6 2));
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
+    }
+);
+
+// ************************************************************************* //
