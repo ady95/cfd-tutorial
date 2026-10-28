@@ -51,8 +51,8 @@ def main(run_dir):
     bad = [(r, why) for r, (good, why) in zip(rows, verdict) if not good]
     print(f"전체 {len(rows)}개: 사용 가능 {len(ok)}개, 제외 {len(bad)}개")
 
-    print("\n제외 케이스             split  e/H    에너지 차이  최고 온도 흔들림"
-          "  압력 흔들림")
+    print("\n제외한 케이스            split  e/H   에너지 차이  최고 온도 흔들림"
+          " 압력 흔들림")
     for r, why in bad:
         case = run_dir / r["case"]
         err = abs(float(r["dT_out"]) / float(r["dT_out_energy"]) - 1)
