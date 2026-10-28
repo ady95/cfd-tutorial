@@ -45,8 +45,10 @@ with ThreadPoolExecutor(6) as pool:
     jobs = [pool.submit(rc.run_case, float(r["H"]), float(r["e"]),
                         int(r["N"]), float(r["U"]), run_dir / "rerun")
             for r in slow]
+    print("케이스                    상태           반복   시간"
+          "  최고 온도 상승  압력손실")
     for job in jobs:
         r = job.result()
-        print(f"{r['case']:<25} {r['status']:<13} 반복 {r.get('iterations')}"
-              f"  {r['seconds']:6.1f}초  최고 {r.get('dT_max')}"
-              f"  압력손실 {r.get('dp')}")
+        print(f"{r['case']:<25} {r['status']:<13} {r.get('iterations'):>5}"
+              f"  {r['seconds']:4.0f}초  {r.get('dT_max'):12}"
+              f"  {r.get('dp')}")
