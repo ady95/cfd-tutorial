@@ -6,6 +6,7 @@ dependencies = [
     "matplotlib>=3.11.2",
     "neuraloperator>=2.0.0",
     "numpy>=2.5.4",
+    "nvidia-physicsnemo>=2.2.2",
     "optuna>=5.0.0",
     "pandas>=3.1.0",
     "pyarrow>=26.0.0",
