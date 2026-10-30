@@ -1,0 +1,31 @@
+# 책 12-1: 흐름만 빨리 확인하는 작은 설정 (CFD 약 60건).
+# 데이터가 적어 품질 기준을 넘지 못하는 것이 정상이다.
+name = "quick"                  # 결과 폴더 이름
+run_dir = "~/cfd-runs/ch12"     # 결과가 쌓이는 곳 (git에 넣지 않음)
+
+[samples]                       # 04-2 LHS
+seed = 2026
+n = 60                          # 범위 안 샘플 수 (train 70%, val·test 15%씩)
+ood = false                     # 범위 밖 시험용 100개를 더 뽑을지
+
+[cfd]                           # 04-3 배치, 04-4 재해석
+workers = 6                     # 동시 해석 수 (케이스마다 코어 1개)
+rerun_slow = false              # 늦게 수렴하는 케이스를 반복 상한을 늘려 다시
+
+[train]                         # 05-4 MLP, 11-1 앙상블
+members = 5                     # 1이면 MLP 하나, 2 이상이면 불확실성도 낸다
+epochs = 20000
+seed = 0
+
+[gate]                          # 6장 test 오차 기준. 넘으면 여기서 멈춘다
+test_mean_pct = 0.2             # 출력별 평균 상대 오차 [%]
+test_max_pct = 2.0              # 출력별 최대 상대 오차 [%]
+
+[optimize]                      # 10-3 단일 목적 최적화
+p_max_ratio = 1.0               # 펌핑 동력 상한 = 기준 설계 x 이 값
+gap_min = 1.0                   # 리브 끝과 가열면 사이 최소 틈 [mm]
+
+[verify]                        # 10-5 CFD 재검증
+cells = [30, 60]                # 높이 방향 셀 수 (데이터셋 격자, 촘촘한 격자)
+tol_pct = 1.0                   # 예측과 CFD(셀 30) 차이 허용 [%]
+workers = 2

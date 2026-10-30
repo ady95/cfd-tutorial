@@ -45,7 +45,7 @@ uv run python -c "import torch; print(torch.cuda.is_available())"
 | 9장 | ch09 | 물리 손실 결합 학습 | 2차 |
 | 10장 | ch10 | Optuna·BoTorch 다목적 최적화, CFD 재검증 | 1차 |
 | 11장 | ch11 | 불확실성 추정, Active Learning 루프, 설계 범위 확장 | 2차 |
-| 12장 | ch12 | 통합 파이프라인, 예측 API | 1차 |
+| 12장 | ch12 | 통합 파이프라인, 예측 API, CFD 재검증, 비용 분석 | 1차 |
 
 ## 재현성 원칙
 
