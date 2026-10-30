@@ -12,6 +12,15 @@ docker run --rm --gpus all --user $(id -u):$(id -g) -v $PWD:/work \
     cfd-tutorial:book bash appendix/a1_env/ref_check.sh
 ```
 
+## A-3 SU2 활용 (a3_su2)
+
+SU2 8.5.0 OpenMP 빌드를 ~/opt/su2-8.5.0에 풀어 둡니다(다른 곳이면 SU2_HOME 지정). 설치 절차는 책 부록 A-3에 있습니다.
+
+```bash
+uv run python appendix/a3_su2/su2_case.py 2 0.6 8 0.1 ~/cfd-runs/a3/su2-base   # 약 20초
+uv run python appendix/a3_su2/compare.py           # OpenFOAM과 비교 12건, 약 3분
+```
+
 ## A-4 3D 해석과 복합 열전달 (a4_3d_cht)
 
 ```bash
