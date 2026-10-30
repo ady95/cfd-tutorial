@@ -33,10 +33,21 @@ _spec.loader.exec_module(al)
 
 NAMES = ["H", "e_ratio", "N", "U"]
 ERR_WARN = 0.5      # 추정 오차가 이 값 [%]을 넘으면 CFD 확인을 권한다
+GAP_MIN = problem.GAP_MIN   # 예측 경고에 쓰는 기본 최소 틈 [mm] (10-1)
+DATA_CELLS = 30     # 데이터셋과 같은 격자. 재검증의 첫 격자이자 피드백 격자
 FEEDBACK_COLS = ["id", "split", "case", "H", "e", "N", "U", "e_ratio",
                  "status", "error", "cells", "iterations", "dp", "dT_max",
                  "dT_avg", "dT_out", "dT_out_energy", "seconds"]
 _lock = threading.Lock()        # problem 모듈의 전역 값을 바꾸는 동안 잠근다
+
+
+def check_cells(cells):
+    """재검증 격자 목록을 검사한다: (데이터셋 격자 30, 그보다 촘촘한 격자)."""
+    cells = tuple(int(c) for c in cells)
+    if len(cells) != 2 or cells[0] != DATA_CELLS or cells[1] <= DATA_CELLS:
+        raise ValueError(f"격자는 [{DATA_CELLS}, 더 촘촘한 격자] 두 개여야 "
+                         f"한다: {list(cells)}")
+    return cells
 
 
 def load_config(path):
@@ -65,6 +76,7 @@ class Surrogate:
             self.meta = json.loads((d / "mlp.json").read_text())
             self.meta["members"] = 1
             self._mlp = problem.load_mlp(d)
+            self._ens = None
             self.k = None
         else:                                   # 파이프라인이 만든 앙상블
             self.meta = json.loads((d / "model.json").read_text())
@@ -89,31 +101,32 @@ class Surrogate:
         ys, us = [], []
         for i in range(0, len(x), chunk):
             part = x[i:i + chunk]
-            if self.members == 1:
+            if self._ens is None:               # 5장 MLP 파일
                 ys.append(self._mlp(part))
-            else:
-                y, u = self._ens.predict(part)
-                ys.append(y)
+                continue
+            y, u = self._ens.predict(part)
+            ys.append(y)
+            if self.members > 1:                # 모델 하나면 불확실성 없음
                 us.append(u * (self.k or 1))    # 보정 배율을 곱한 2σ의 절반
         return np.vstack(ys), (np.vstack(us) if us else None)
 
-    def warnings(self, x):
+    def warnings(self, x, gap_min=GAP_MIN):
         """설계마다 경고 문장 목록: 학습 범위 밖 변수, 틈 제약 (06-3, 10-1)."""
         x = np.atleast_2d(x)
         out = [[] for _ in x]
         for i, j in zip(*np.nonzero((x < self.lo) | (x > self.hi))):
             out[i].append(f"{NAMES[j]}={x[i, j]:g}: 학습 범위 "
                           f"{self.lo[j]:g}~{self.hi[j]:g} 밖")
-        for i in np.flatnonzero(problem.gap(x) < problem.GAP_MIN):
+        for i in np.flatnonzero(problem.gap(x) < gap_min):
             out[i].append(f"틈 {problem.gap(x[i])[0]:.2f}mm: "
-                          f"최소 {problem.GAP_MIN:g}mm 미만")
+                          f"최소 {gap_min:g}mm 미만")
         return out
 
-    def describe(self, x):
+    def describe(self, x, gap_min=GAP_MIN):
         """설계 (n, 4) -> 예측, 펌핑 동력, 틈, 추정 오차, 경고를 담은 dict 목록."""
         x = np.atleast_2d(np.asarray(x, dtype=float))
         y, err = self.predict(x)
-        warns = self.warnings(x)
+        warns = self.warnings(x, gap_min)
         rows = []
         for i, v in enumerate(x):
             r = {"design": dict(zip(NAMES, [float(v[0]), float(v[1]),
@@ -138,27 +151,43 @@ class Surrogate:
 def optimize(sur, p_max_ratio=1.0, gap_min=1.0, steps=(101, 81, 101)):
     """P ≤ 기준 설계 x p_max_ratio에서 dT_max 최소 설계 (10-3의 best_design)."""
     with _lock:
+        saved = problem._mlp, problem.GAP_MIN
         problem._mlp = lambda x: sur.predict(x)[0]
-        problem.GAP_MIN = gap_min
-        start = time.perf_counter()
-        x = problem.grid(steps)
-        base = problem.base_values()
-        design, pred = problem.best_design(base["P"] * p_max_ratio, x,
-                                           problem.surrogate(x))
-        sec = time.perf_counter() - start
+        problem.GAP_MIN = gap_min       # 10장 코드가 전역 값을 읽는다
+        try:
+            start = time.perf_counter()
+            x = problem.grid(steps)
+            base = problem.base_values()
+            design, pred = problem.best_design(base["P"] * p_max_ratio, x,
+                                               problem.surrogate(x))
+            sec = time.perf_counter() - start
+        finally:                        # 다음 요청에 남지 않게 되돌린다
+            problem._mlp, problem.GAP_MIN = saved
     return {"design": dict(zip(NAMES, [float(design[0]), float(design[1]),
                                        int(design[2]), float(design[3])])),
             "pred": pred, "base": base, "p_max": base["P"] * p_max_ratio,
+            "constraints": {"p_max_ratio": p_max_ratio, "gap_min": gap_min},
             "seconds": sec}
 
 
+def _done(r, keys=("dT_max", "P")):
+    """CFD 결과가 수렴했고 필요한 값이 모두 유한한가."""
+    return r["status"] == "ok" and all(
+        r.get(k) is not None and np.isfinite(r[k]) for k in keys)
+
+
 def verify(sur, design, run_dir, cells=(30, 60), tol=1.0,
-           p_max_ratio=None, workers=2):
+           p_max_ratio=None, gap_min=None, workers=2):
     """기준 설계와 design을 CFD로 해석하고 예측과 비교해 판정한다 (10-5).
 
-    판정: 'fail' CFD가 수렴하지 않음, 'mismatch' 예측과 CFD(셀 30) 차이가
-    tol [%]를 넘음, 'caution' 촘촘한 격자에서 동력 상한을 넘음, 'pass' 그 밖.
+    판정: 'fail' 설계의 셀 30 CFD가 수렴하지 않음, 'mismatch' 예측과
+    CFD(셀 30) 차이가 tol [%]를 넘음, 'incomplete' 나머지 CFD(기준 설계,
+    촘촘한 격자) 가운데 실패가 있어 제약을 확인하지 못함, 'caution' 촘촘한
+    격자에서 동력 상한을 넘거나 틈 제약을 어김, 'pass' 그 밖.
+    p_max_ratio, gap_min은 최적화에 쓴 제약이다. None이면 그 검사를 하지
+    않고 notes에 적는다. 사유가 여럿이면 reasons에 모두 남긴다.
     """
+    cells = check_cells(cells)
     run_dir = Path(run_dir).expanduser()
     x = np.array([problem.BASE, [design[n] for n in NAMES]], dtype=float)
     pred = sur.describe(x)
@@ -168,38 +197,57 @@ def verify(sur, design, run_dir, cells=(30, 60), tol=1.0,
     out = {"design": design, "pred": pred[1], "base_pred": pred[0],
            "cfd": {str(c): r[1] for c, r in res.items()},
            "base_cfd": {str(c): r[0] for c, r in res.items()},
-           "seconds": round(time.time() - start, 1), "notes": []}
+           "seconds": round(time.time() - start, 1), "notes": [],
+           "constraints": {"p_max_ratio": p_max_ratio, "gap_min": gap_min}}
     c0 = res[cells[0]][1]
-    if c0["status"] != "ok":
+    if not _done(c0):
         out["verdict"] = "fail"
-        out["notes"].append(f"셀 {cells[0]} CFD {c0['status']}: "
+        why = c0["status"] if c0["status"] != "ok" else "값 이상"
+        out["notes"].append(f"셀 {cells[0]} CFD {why}: "
                             "이 설계는 학습 데이터로 쓰지 않는다")
         return out
     errs = {k: (pred[1][k] / c0[k] - 1) * 100 for k in ("dT_max", "P")}
     out["pred_error_pct"] = errs
-    out["verdict"] = "pass"
+    reasons = []
     if max(abs(e) for e in errs.values()) > tol:
-        out["verdict"] = "mismatch"
+        reasons.append("mismatch")
         out["notes"].append(f"예측과 CFD 차이가 {tol:g}%를 넘음: "
                             "데이터를 더해 다시 학습")
-    fine = res[cells[-1]][1]
-    if p_max_ratio and fine["status"] == "ok" and len(cells) > 1:
-        base_fine = res[cells[-1]][0]
-        if fine["P"] > base_fine["P"] * p_max_ratio:
-            over = (fine["P"] / base_fine["P"] - 1) * 100
-            out["notes"].append(f"셀 {cells[-1]}에서 펌핑 동력이 기준보다 "
-                                f"{over:+.1f}%: 제약에 격자 오차만큼 여유 필요")
-            if out["verdict"] == "pass":
-                out["verdict"] = "caution"
+    # 제약 확인에 필요한 나머지 CFD: 기준 설계 두 격자, 설계의 촘촘한 격자
+    need = [(f"기준 설계 셀 {c}", res[c][0]) for c in cells]
+    need.append((f"셀 {cells[1]}", res[cells[1]][1]))
+    bad = [f"{name} {r['status']}" for name, r in need if not _done(r)]
+    if bad:
+        reasons.append("incomplete")
+        out["notes"].append("재검증 미완료(" + ", ".join(bad) + "): "
+                            "제약을 확인하지 못함")
+    fine, base_fine = res[cells[1]][1], res[cells[1]][0]
+    if p_max_ratio is None:
+        out["notes"].append("동력 제약을 받지 않아 검사하지 않음")
+    elif not bad and fine["P"] > base_fine["P"] * p_max_ratio:
+        over = (fine["P"] / base_fine["P"] - 1) * 100
+        out["notes"].append(f"셀 {cells[1]}에서 펌핑 동력이 기준보다 "
+                            f"{over:+.1f}%: 제약에 격자 오차만큼 여유 필요")
+        reasons.append("caution")
+    if gap_min is not None and problem.gap(x[1])[0] < gap_min - 1e-9:
+        out["notes"].append(f"틈 {problem.gap(x[1])[0]:.2f}mm: "
+                            f"최소 {gap_min:g}mm 미만")
+        reasons.append("caution")
+    out["reasons"] = reasons
+    out["verdict"] = next((v for v in ("mismatch", "incomplete", "caution")
+                           if v in reasons), "pass")
     return out
 
 
-def add_feedback(path, result, run_dir, cells=30):
+def add_feedback(path, result, run_dir, cells=DATA_CELLS):
     """재검증한 CFD(데이터셋과 같은 셀 30 격자) 결과를 feedback.csv에 쌓는다.
 
     수렴하지 않은 설계는 학습 데이터에 넣지 않고 avoid.csv에 따로 적는다.
     같은 케이스가 이미 있으면 다시 쓰지 않는다. 더한 행 수를 돌려준다.
+    다른 격자의 결과는 데이터셋과 섞이지 않도록 받지 않는다.
     """
+    if cells != DATA_CELLS:
+        raise ValueError(f"피드백은 데이터셋 격자(셀 {DATA_CELLS})만 받는다")
     path = Path(path)
     have = set()
     if path.exists():

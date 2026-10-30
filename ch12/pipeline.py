@@ -217,12 +217,16 @@ def verify(cfg):
     r = system.verify(sur, opt["design"], cfg["out"] / "verify",
                       cells=c["cells"], tol=c["tol_pct"],
                       p_max_ratio=cfg["optimize"]["p_max_ratio"],
+                      gap_min=cfg["optimize"]["gap_min"],
                       workers=c["workers"])
     (cfg["out"] / "verify.json").write_text(
         json.dumps(r, ensure_ascii=False, indent=2) + "\n")
     print(system.verify_report(r, sur.meta["model"]))
     if r["verdict"] == "fail":
         raise GateError("최적 설계가 CFD에서 수렴하지 않음")
+    if r["verdict"] == "incomplete":
+        raise GateError(next(n for n in r["notes"]
+                             if n.startswith("재검증 미완료")))
     return {"verdict": r["verdict"], "seconds": r["seconds"]}
 
 

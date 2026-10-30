@@ -9,6 +9,7 @@
 다른 스크립트에서는 judge(행)이 (사용 가능 여부, 이유)를 돌려준다.
 """
 import csv
+import math
 import sys
 from pathlib import Path
 
@@ -20,16 +21,25 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 ENERGY_TOL = 0.001          # 출구 온도 상승과 에너지 수지의 허용 상대 차이
 MAX_ITER = 5000             # template의 반복 상한 (controlDict endTime)
+VALUES = ("dp", "dT_max", "dT_avg", "dT_out", "dT_out_energy")  # 필수 값
 
 
 def judge(r):
     """results.csv의 한 행을 받아 (학습에 쓸 수 있는지, 이유)를 돌려준다."""
     if r["status"] != "ok":
         return False, r["status"]                   # 미수렴·실패
-    err = abs(float(r["dT_out"]) / float(r["dT_out_energy"]) - 1)
+    try:
+        v = {k: float(r[k]) for k in VALUES}
+    except (KeyError, TypeError, ValueError):
+        return False, "값이 없거나 숫자가 아님"
+    if not all(math.isfinite(x) for x in v.values()):
+        return False, "값이 유한하지 않음"            # NaN, inf
+    if v["dT_out_energy"] <= 0:
+        return False, "에너지 수지 기준값이 0 이하"
+    err = abs(v["dT_out"] / v["dT_out_energy"] - 1)
     if err > ENERGY_TOL:
         return False, f"에너지 수지 {err:.2%} 어긋남"
-    dp, t_max, t_avg = (float(r[k]) for k in ("dp", "dT_max", "dT_avg"))
+    dp, t_max, t_avg = v["dp"], v["dT_max"], v["dT_avg"]
     if not (dp > 0 and 0 < t_avg < t_max):
         return False, "물리적으로 맞지 않는 값"
     return True, ""

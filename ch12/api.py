@@ -21,7 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 import system
 
@@ -55,8 +55,15 @@ class OptimizeRequest(BaseModel):
 
 class VerifyRequest(BaseModel):
     design: Design
-    cells: list[int] = [30, 60]
+    cells: list[int] = [30, 60]     # 데이터셋 격자 30, 촘촘한 격자
+    p_max_ratio: float = Field(1.0, gt=0, description="최적화에 쓴 동력 상한")
+    gap_min: float = Field(1.0, gt=0, description="최적화에 쓴 최소 틈 [mm]")
     feedback: bool = True           # 결과를 다음 학습 데이터로 쌓을지
+
+    @field_validator("cells")
+    @classmethod
+    def _cells(cls, v):
+        return list(system.check_cells(v))
 
 
 @app.get("/info")
@@ -81,7 +88,8 @@ def predict(req: PredictRequest):
 def optimize(req: OptimizeRequest):
     r = system.optimize(sur, req.p_max_ratio, req.gap_min)
     d = r["design"]
-    r["result"] = sur.describe([[d[n] for n in system.NAMES]])[0]
+    r["result"] = sur.describe([[d[n] for n in system.NAMES]],
+                               req.gap_min)[0]
     return r
 
 
@@ -93,10 +101,11 @@ def run_job(job, req):
     path.write_text(json.dumps(rec, ensure_ascii=False, indent=2))
     try:
         res = system.verify(sur, req.design.model_dump(), OUT / "verify-api",
-                            cells=tuple(req.cells), p_max_ratio=1.0)
+                            cells=req.cells, p_max_ratio=req.p_max_ratio,
+                            gap_min=req.gap_min)
         if req.feedback:
             res["feedback_added"] = system.add_feedback(
-                OUT / "feedback.csv", res, OUT / "verify-api", req.cells[0])
+                OUT / "feedback.csv", res, OUT / "verify-api")
         text = system.verify_report(res, sur.meta["model"])
         (JOBS / f"{job}.md").write_text(text, encoding="utf-8")
         rec.update(status="done", result=res, report=text)

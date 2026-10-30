@@ -25,6 +25,7 @@ def call(url, body=None):
 ap = argparse.ArgumentParser()
 ap.add_argument("--url", default="http://127.0.0.1:8000")
 ap.add_argument("--p-max", type=float, default=1.0, help="동력 상한 비율")
+ap.add_argument("--gap-min", type=float, default=1.0, help="최소 틈 [mm]")
 ap.add_argument("--design", type=float, nargs=4, metavar=("H", "E", "N", "U"))
 args = ap.parse_args()
 
@@ -33,14 +34,17 @@ if args.design:
     design = {"H": H, "e_ratio": er, "N": int(N), "U": U}
 else:
     start = time.time()
-    r = call(f"{args.url}/optimize", {"p_max_ratio": args.p_max})
+    r = call(f"{args.url}/optimize", {"p_max_ratio": args.p_max,
+                                      "gap_min": args.gap_min})
     design, p = r["design"], r["result"]
     print(f"최적 설계 ({time.time() - start:.1f}초): H {design['H']:.3f}"
           f" e/H {design['e_ratio']:.3f} N {design['N']} U {design['U']:.4f}")
     print(f"  예측 dT_max {p['dT_max']:.3f}K (기준 {r['base']['dT_max']:.3f}K)"
           f", P {p['P']:.3f} mW/m (상한 {r['p_max']:.3f})")
 
-job = call(f"{args.url}/verify", {"design": design})["job"]
+# 최적화에 쓴 제약을 재검증에도 그대로 넘긴다
+job = call(f"{args.url}/verify", {"design": design, "p_max_ratio": args.p_max,
+                                  "gap_min": args.gap_min})["job"]
 print(f"재검증 작업 {job} 접수")
 start, last = time.time(), "queued"
 while True:

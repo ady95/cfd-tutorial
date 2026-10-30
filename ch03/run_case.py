@@ -9,6 +9,7 @@
 다른 스크립트에서는 run_case(H, e, N, U, 작업 폴더)가 결과를 dict로 돌려준다.
 OpenFOAM 환경을 불러온 bash에서 실행한다 (책 02-1).
 """
+import hashlib
 import json
 import shutil
 import signal
@@ -42,21 +43,39 @@ def run(cmd, case, name):
         raise RuntimeError(f"{name} 실패 (종료 코드 {p.returncode})")
 
 
+def inputs_hash(text, U):
+    """해석 입력의 지문: 템플릿 파일 전체, blockMeshDict, 입구 유속."""
+    h = hashlib.sha256()
+    for f in sorted(p for p in TEMPLATE.rglob("*") if p.is_file()):
+        h.update(f.relative_to(TEMPLATE).as_posix().encode())
+        h.update(f.read_bytes())
+    h.update(text.encode())
+    h.update(f"{U}".encode())
+    return h.hexdigest()[:16]
+
+
 def run_case(H, e, N, U, run_dir):
     case = Path(run_dir).expanduser() / case_name(H, e, N, U)
     saved = case / "result.json"
-    if saved.exists():              # 이미 끝난 케이스는 다시 돌리지 않는다
-        return json.loads(saved.read_text())
+    text, cells = block_mesh_dict(H, e, N)
+    key = inputs_hash(text, U)
+    if saved.exists():              # 입력이 같으면 다시 돌리지 않는다
+        old = json.loads(saved.read_text())
+        if old.get("inputs", key) == key:   # 지문이 없는 옛 결과는 그대로 쓴다
+            return old
+        stale = case.parent / "_stale" / f"{case.name}_{old['inputs']}"
+        shutil.rmtree(stale, ignore_errors=True)
+        stale.parent.mkdir(exist_ok=True)
+        shutil.move(case, stale)    # 입력이 바뀐 옛 결과는 옮겨 두고 새로 해석
     if case.exists():               # 중간에 멈춘 케이스는 지우고 새로 시작
         shutil.rmtree(case)
     shutil.copytree(TEMPLATE, case)
 
     record = {"case": case.name, "H": H, "e": e, "N": N, "U": U,
-              "status": None, "error": None, "cells": None}
+              "status": None, "error": None, "cells": None, "inputs": key}
     start = time.time()
     try:
         # 1) 변수 치환: 형상은 blockMeshDict를 새로 쓰고, 유속은 0/U를 고친다
-        text, cells = block_mesh_dict(H, e, N)
         (case / "system" / "blockMeshDict").write_text(text)
         run(["foamDictionary", "0/U", "-entry", "boundaryField/inlet/value",
              "-set", f"uniform ({U} 0 0)"], case, "foamDictionary")
