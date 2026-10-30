@@ -1,0 +1,5 @@
+# 책 부록 A-1 Docker 빌드에는 잠금 파일만 보낸다 (저장소는 실행할 때 연결)
+*
+!pyproject.toml
+!uv.lock
+!.python-version
