@@ -22,6 +22,7 @@ from mgn_common import denorm, rel_l2, scalars, to_data
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.tri  # noqa: E402,F401
 
 SPLITS = ["val", "test", "ood_U", "ood_H"]
 
@@ -83,7 +84,12 @@ g, p = test[j], preds["test"][j].numpy()
 xy = g["x"][:, :2].numpy() * [80, 3]
 true = g["y"][:, 3].numpy()
 keep = (xy[:, 0] >= 40) & (xy[:, 0] <= 72)
-fig, axes = plt.subplots(3, 1, figsize=(14, 6.6), sharex=True)
+# 셀 중심을 삼각형으로 이어 면으로 칠한다. 리브 속을 건너는 긴 삼각형은 뺀다
+tri = matplotlib.tri.Triangulation(xy[keep, 0], xy[keep, 1])
+pts = np.column_stack([tri.x, tri.y])[tri.triangles]
+edge = np.linalg.norm(pts - np.roll(pts, 1, axis=1), axis=2).max(axis=1)
+tri.set_mask(edge > 0.35)
+fig, axes = plt.subplots(3, 1, figsize=(14, 8.4), sharex=True)
 vmax = true[keep].max()
 for ax, v, title, cmap, lim in [
         (axes[0], true, "CFD dT (K)", "inferno", (0, vmax)),
@@ -92,11 +98,11 @@ for ax, v, title, cmap, lim in [
     if lim is None:
         a = np.abs(v[keep]).max()
         lim = (-a, a)
-    sc = ax.scatter(xy[keep, 0], xy[keep, 1], c=v[keep], s=1.2, marker="s",
-                    cmap=cmap, vmin=lim[0], vmax=lim[1], linewidths=0)
+    sc = ax.tripcolor(tri, v[keep], shading="gouraud", cmap=cmap,
+                      vmin=lim[0], vmax=lim[1])
     ax.set_title(title, fontsize=11)
     ax.set_ylabel("y (mm)")
-    ax.set_aspect(2)
+    ax.set_aspect(3)                     # 높이 3배 확대
     fig.colorbar(sc, ax=ax, fraction=0.02, pad=0.01)
 axes[-1].set_xlabel("x (mm)")
 fig.suptitle(f"test case {g['case']} (median dT error "
