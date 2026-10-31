@@ -103,6 +103,7 @@ def run_job(job, req):
         res = system.verify(sur, req.design.model_dump(), OUT / "verify-api",
                             cells=req.cells, p_max_ratio=req.p_max_ratio,
                             gap_min=req.gap_min)
+        rec["result"] = res         # 뒤 단계가 실패해도 판정은 남긴다
         if req.feedback:
             res["feedback_added"] = system.add_feedback(
                 OUT / "feedback.csv", res, OUT / "verify-api")

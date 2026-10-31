@@ -176,6 +176,12 @@ def _done(r, keys=("dT_max", "P")):
         r.get(k) is not None and np.isfinite(r[k]) for k in keys)
 
 
+def _clean(r):
+    """NaN·무한대를 None으로 바꾼 사본. 보고서와 JSON에 정상값처럼 남지 않게."""
+    return {k: None if isinstance(v, float) and not np.isfinite(v) else v
+            for k, v in r.items()}
+
+
 def verify(sur, design, run_dir, cells=(30, 60), tol=1.0,
            p_max_ratio=None, gap_min=None, workers=2):
     """기준 설계와 design을 CFD로 해석하고 예측과 비교해 판정한다 (10-5).
@@ -195,8 +201,8 @@ def verify(sur, design, run_dir, cells=(30, 60), tol=1.0,
     res = {c: problem.cfd(x, run_dir / f"nh{c}", cells_h=c, workers=workers)
            for c in cells}
     out = {"design": design, "pred": pred[1], "base_pred": pred[0],
-           "cfd": {str(c): r[1] for c, r in res.items()},
-           "base_cfd": {str(c): r[0] for c, r in res.items()},
+           "cfd": {str(c): _clean(r[1]) for c, r in res.items()},
+           "base_cfd": {str(c): _clean(r[0]) for c, r in res.items()},
            "seconds": round(time.time() - start, 1), "notes": [],
            "constraints": {"p_max_ratio": p_max_ratio, "gap_min": gap_min}}
     c0 = res[cells[0]][1]
@@ -257,6 +263,9 @@ def add_feedback(path, result, run_dir, cells=DATA_CELLS):
     for r in (result["base_cfd"][str(cells)], result["cfd"][str(cells)]):
         rec = json.loads((Path(run_dir).expanduser() / f"nh{cells}"
                           / r["case"] / "result.json").read_text())
+        if rec["status"] == "ok" and not _done(rec, ("dp", "dT_max",
+                                                     "dT_avg")):
+            rec["status"] = "값 이상"           # 수렴했지만 값이 비었거나 NaN
         if rec["status"] != "ok":
             avoid = path.with_name("avoid.csv")
             new = not avoid.exists()
@@ -304,8 +313,9 @@ def verify_report(result, model_name):
                      " | ".join("-" if v is None else f"{v:.3f}"
                                 for v in vals) + " |")
     base = [result["base_cfd"][c] for c in cells]
-    if all(b["status"] == "ok" for b in base) and \
-            all(result["cfd"][c]["status"] == "ok" for c in cells):
+    # 판정과 같은 기준(_done)으로, 모든 해석이 계산 가능할 때만 기준 대비를 낸다
+    if all(_done(b) and b["P"] > 0 for b in base) and \
+            all(_done(result["cfd"][c]) for c in cells):
         lines += ["", "| 기준 대비 | 예측 | " +
                   " | ".join(f"CFD 셀 {c}" for c in cells) + " |",
                   "|---|---|" + "---|" * len(cells)]

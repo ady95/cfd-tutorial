@@ -1,4 +1,4 @@
-"""검수에서 찾은 결함(R01~R07)이 고쳐졌는지 짧게 확인한다.
+"""검수에서 찾은 결함(1차 R01~R07, 2차 N01·N02·N06)이 고쳐졌는지 짧게 확인한다.
 
 CFD와 학습은 돌리지 않는다. 해석 결과와 무거운 계산은 가짜 함수로 바꿔 끼우고,
 판정·검증·캐시 코드가 그 결과를 어떻게 다루는지만 본다. OpenFOAM 없이 돈다.
@@ -78,6 +78,49 @@ check("R01 mismatch와 미완료 사유를 함께 남김",
       r["verdict"] == "mismatch" and "incomplete" in r["reasons"])
 r = verdict({30: (ok(), ok()), 60: (ok(), ok())}, p_max_ratio=1.0)
 check("R01 모두 수렴, 제약 안 -> pass", r["verdict"] == "pass")
+
+# ---- N01: 값 이상으로 incomplete가 된 결과도 보고서까지 예외 없이 간다 --------
+odd = {**ok(), "P": None}               # 수렴했다고 적혔지만 값이 빈 결과
+r = verdict({30: (ok(), ok()), 60: (odd, ok())}, p_max_ratio=1.0)
+check("N01 기준 셀 60 P=None -> incomplete", r["verdict"] == "incomplete")
+check("N01 보고서가 예외 없이 만들어짐",
+      not raises(lambda: system.verify_report(r, "test")))
+r = verdict({30: (ok(), ok()), 60: (ok(), ok(P=math.nan))}, p_max_ratio=1.0)
+check("N01 NaN은 결과에 None으로 남고 JSON으로 쓸 수 있음",
+      r["cfd"]["60"]["P"] is None
+      and not raises(lambda: json.dumps(r, allow_nan=False)))
+check("N01 NaN 결과의 보고서도 예외 없이 만들어짐",
+      not raises(lambda: system.verify_report(r, "test")))
+
+# ---- N02: 사유가 여럿이어도 incomplete면 파이프라인이 멈춘다 ------------------
+import pipeline  # noqa: E402
+
+
+def gate(reasons):
+    verdict_ = next((v for v in ("mismatch", "incomplete") if v in reasons),
+                    "pass")
+    notes = ["재검증 미완료(셀 60 failed): 제약을 확인하지 못함"]
+    out = Path(tempfile.mkdtemp())
+    (out / "optimum.json").write_text(json.dumps({"design": {}}))
+    cfg = {"out": out, "optimize": {"p_max_ratio": 1.0, "gap_min": 1.0},
+           "verify": {"cells": [30, 60], "tol_pct": 1.0, "workers": 1}}
+    saved = (system.Surrogate, system.verify, system.verify_report)
+    system.Surrogate = lambda d: type("S", (), {"meta": {"model": "t"}})()
+    system.verify = lambda *a, **kw: {"verdict": verdict_, "reasons": reasons,
+                                      "notes": notes, "seconds": 0.0}
+    system.verify_report = lambda *a: ""
+    try:
+        pipeline.verify(cfg)
+        return False
+    except pipeline.GateError:
+        return True
+    finally:
+        system.Surrogate, system.verify, system.verify_report = saved
+
+
+check("N02 mismatch만 -> 멈추지 않음", not gate(["mismatch"]))
+check("N02 incomplete만 -> 멈춤", gate(["incomplete"]))
+check("N02 mismatch와 incomplete -> 멈춤", gate(["mismatch", "incomplete"]))
 
 # ---- R02: 요청한 동력 상한·최소 틈으로 판정한다 ------------------------------
 r = verdict({30: (ok(), ok()), 60: (ok(10.0), ok(9.0))}, p_max_ratio=0.8)
@@ -190,6 +233,10 @@ saved.write_text(json.dumps(legacy))
 calls.clear()
 check("R05 지문이 없는 옛 결과는 그대로 씀",
       rc.run_case(2.0, 0.6, 8, 0.1, work) == legacy and not calls)
+cdict.write_text(cdict.read_text() + "\n// 다시 바꾼 템플릿\n")
+calls.clear()
+check("N06 지문이 없는 옛 결과는 템플릿을 바꿔도 다시 해석하지 않음(본문 안내)",
+      rc.run_case(2.0, 0.6, 8, 0.1, work) == legacy and not calls)
 
 # ---- API 요청 검사 (R02, R04) -----------------------------------------------
 try:
@@ -216,6 +263,21 @@ else:
         f.unlink()
     check("API /verify가 요청한 제약을 그대로 넘김",
           got.get("p_max_ratio") == 0.8 and got.get("gap_min") == 1.2)
+
+    def broken_report(*a):
+        raise TypeError("보고서 실패")
+
+    api.system.verify = staticmethod(lambda *a, **kw: {"verdict":
+                                                       "incomplete"})
+    api.system.verify_report = staticmethod(broken_report)
+    (api.JOBS / f"{job}.json").write_text("{}")
+    api.run_job(job, req)
+    rec = json.loads((api.JOBS / f"{job}.json").read_text())
+    for f in api.JOBS.glob(f"{job}.*"):
+        f.unlink()
+    check("N01 API 보고서가 실패해도 판정 결과를 남김",
+          rec["status"] == "error"
+          and rec.get("result", {}).get("verdict") == "incomplete")
 
 bad = [n for n, c in results if not c]
 print(f"\n{len(results) - len(bad)}/{len(results)} 통과")

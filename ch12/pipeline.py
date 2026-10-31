@@ -224,7 +224,7 @@ def verify(cfg):
     print(system.verify_report(r, sur.meta["model"]))
     if r["verdict"] == "fail":
         raise GateError("최적 설계가 CFD에서 수렴하지 않음")
-    if r["verdict"] == "incomplete":
+    if "incomplete" in r.get("reasons", []):   # mismatch와 겹쳐도 멈춘다
         raise GateError(next(n for n in r["notes"]
                              if n.startswith("재검증 미완료")))
     return {"verdict": r["verdict"], "seconds": r["seconds"]}
