@@ -3,6 +3,7 @@
 1) test(범위 안)와 ood_U(U 0.15~0.20), ood_H(H 2.5~3.0)의 상대 오차를 비교한다.
 2) 범위 경계에서 멀어질수록 오차가 얼마나 커지는지 구간별로 나눠 본다.
 3) 범위 검사와 최근접 거리로 OOD 입력을 얼마나 골라내는지 확인한다.
+   최근접 거리의 기준값은 val에서 정하고 test·OOD에서 평가한다.
 
 사용법: uv run python ch06/ood.py [출력 폴더]   (기본 ~/cfd-runs/ch06)
 결과:   표 출력과 출력 폴더의 ood.png
@@ -69,8 +70,9 @@ def nearest(x):
     return np.sqrt((d ** 2).sum(axis=2)).min(axis=1)
 
 
-limit = np.percentile(nearest(data["test"][0]), 95)
-print(f"\nOOD 감지 (최근접 거리 기준값 = test의 95번째 백분위 {limit:.3f})")
+# 기준값은 val로 정하고, test와 OOD에는 그 값을 그대로 적용해 평가만 한다
+limit = np.percentile(nearest(load("val")[0]), 95)
+print(f"\nOOD 감지 (최근접 거리 기준값 = val의 95번째 백분위 {limit:.3f})")
 print("데이터    범위 밖 판정   최근접 거리 초과   최근접 거리 중앙값")
 for s, (x, _, _) in data.items():
     out = ((x < lo) | (x > hi)).any(axis=1)
