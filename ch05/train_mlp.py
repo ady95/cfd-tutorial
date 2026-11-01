@@ -132,8 +132,8 @@ others["MLP"] = predict(base, x_va)
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "~/cfd-runs/ch05")
 out = out.expanduser()
 out.mkdir(parents=True, exist_ok=True)
-fig, axes = plt.subplots(1, 4, figsize=(16, 4),
-                         gridspec_kw={"width_ratios": [1.3, 1, 1, 1]})
+fig, axes = plt.subplots(2, 2, figsize=(8, 6.4))   # 책 본문 폭에 맞춘 2 x 2
+axes = axes.ravel()
 ep, tr, va = np.array(log).T
 axes[0].semilogy(ep, tr, color="#2a78d6", lw=2, label="train")
 axes[0].semilogy(ep, va, color="#eb6834", lw=2, label="val")
@@ -148,7 +148,7 @@ for i, (ax, t) in enumerate(zip(axes[1:], TARGETS)):
     ax.boxplot(err, tick_labels=list(others), showfliers=True,
                flierprops={"markersize": 3})
     ax.set(yscale="log", title=f"({'bcd'[i]}) {t} on val",
-           ylabel="relative error [%]" if i == 0 else "")
+           ylabel="relative error [%]" if i < 2 else "")
 for ax in axes:
     ax.grid(alpha=0.3)
 fig.tight_layout()

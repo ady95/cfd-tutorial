@@ -56,7 +56,7 @@ x0, x1 = np.searchsorted(np.linspace(0, 80, nx), [40, 72])
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "~/cfd-runs/ch07")
 out = out.expanduser()
 out.mkdir(parents=True, exist_ok=True)
-fig, axes = plt.subplots(3, 2, figsize=(14, 6.2), sharex=True, sharey=True)
+fig, axes = plt.subplots(3, 2, figsize=(8, 6.6), sharex=True, sharey=True)
 for col, (c, name, cmap) in enumerate([(3, "dT [K]", "inferno"),
                                        (0, "Ux [m/s]", "viridis")]):
     f = data["fields"][i, c]

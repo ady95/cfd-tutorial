@@ -89,7 +89,7 @@ for name in models:
     maps[name] = np.where(cnt > 0, (e * mk).sum(0) / np.maximum(cnt, 1),
                           np.nan)
 vmax = max(np.nanpercentile(a, 99) for a in maps.values())
-fig, axes = plt.subplots(2, 1, figsize=(14, 4.6), sharex=True)
+fig, axes = plt.subplots(2, 1, figsize=(8, 4.4), sharex=True)
 for ax, (name, a) in zip(axes, maps.items()):
     im = ax.imshow(a, origin="lower", cmap="magma", aspect="auto",
                    extent=(0, 80, 0, 3), vmin=0, vmax=vmax)

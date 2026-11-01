@@ -112,7 +112,8 @@ out = out.expanduser()
 out.mkdir(parents=True, exist_ok=True)
 names = ["channel height H [mm]", "rib height ratio e/H", "number of ribs N",
          "inlet velocity U [m/s]"]
-fig, axes = plt.subplots(1, 4, figsize=(16, 4), sharey=True)
+fig, axes = plt.subplots(2, 2, figsize=(8, 6.4), sharey=True)  # 책 본문 폭
+axes = axes.ravel()
 for i, (ax, c, name) in enumerate(zip(axes, INPUTS, names)):
     ax.scatter(df[c], df["err"], s=8, color="0.65", label="each case")
     k = pd.qcut(df[c], 6, labels=False, duplicates="drop")  # 개수가 같은 6구간
@@ -121,7 +122,8 @@ for i, (ax, c, name) in enumerate(zip(axes, INPUTS, names)):
             label="bin mean")
     ax.set(xlabel=name, yscale="log", title=f"({'abcd'[i]}) error vs. {c}")
     ax.grid(alpha=0.3)
-axes[0].set_ylabel("max relative error of 3 outputs [%]")
+for ax in (axes[0], axes[2]):
+    ax.set_ylabel("max relative error of 3 outputs [%]")
 axes[0].legend(loc="lower left")
 fig.tight_layout()
 fig.savefig(out / "error-by-input.png", dpi=150)

@@ -38,7 +38,8 @@ pl.add_mesh(
     view, scalars="Ux", cmap="viridis", lighting=False,
     scalar_bar_args={"title": "Ux [m/s]", "n_labels": 4, "fmt": "%.3f",
                      "position_x": 0.25, "position_y": 0.03,
-                     "width": 0.5, "height": 0.1},
+                     "width": 0.5, "height": 0.16,
+                     "title_font_size": 36, "label_font_size": 32},
 )
 pl.view_xy()
 pl.camera.zoom(3.0)     # 화면 폭에 맞게 확대

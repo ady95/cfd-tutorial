@@ -97,7 +97,8 @@ def main():
               f" {d['edge']:8.0f}% {d['nn']:10.3f}   {u[i].mean():10.3f}%")
 
     # 윗줄: e/H-U 평면(점선 오른쪽 위가 06-5의 모서리), 아랫줄: N-H 평면
-    fig, axes = plt.subplots(2, 3, figsize=(12, 7.6), sharex="row",
+    plt.rcParams["font.size"] = 12     # 책 본문 폭으로 줄여도 읽히게
+    fig, axes = plt.subplots(2, 3, figsize=(9.5, 7.2), sharex="row",
                              sharey="row")
     jit = np.random.default_rng(1).uniform(-0.25, 0.25, len(cand))
     titles = ["random", "top uncertainty", "uncertainty + diversity"]
@@ -118,7 +119,7 @@ def main():
         axes[1, col].set_xlabel("number of ribs N")
     axes[0, 0].set_ylabel("inlet velocity U [m/s]")
     axes[1, 0].set_ylabel("channel height H [mm]")
-    axes[0, 0].legend(loc="lower left", fontsize=8, framealpha=0.9)
+    axes[0, 0].legend(loc="lower left", fontsize=9, framealpha=0.9)
     fig.tight_layout()
     fig.savefig(OUT / "select.png", dpi=150)
     print(f"\n그림: {OUT / 'select.png'}")

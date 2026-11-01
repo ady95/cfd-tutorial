@@ -120,7 +120,8 @@ def loop_part():
         print(f"  {pad(NAMES[s], 36)} {picked(h, 'corner'):5.0f}%"
               f" {picked(h, 'few'):9.0f}% {picked(h, 'edge'):8.0f}%")
 
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
+    plt.rcParams["font.size"] = 12     # 책 본문 폭으로 줄여도 읽히게
+    fig, axes = plt.subplots(1, 3, figsize=(10.5, 4.2))
     for s, h in hs.items():
         n = stack(h, "n").mean(0)
         t = np.array([[x["cfd_seconds"] for x in r] for r in h]).mean(0) / 60
@@ -147,7 +148,7 @@ def loop_part():
     for ax in axes:
         ax.set(yscale="log")
         ax.grid(alpha=0.3, which="both")
-    axes[0].legend(fontsize=8)
+    axes[0].legend(fontsize=9)
     fig.tight_layout()
     fig.savefig(AL.parent / "al_curve.png", dpi=150)
     print(f"\n그림: {AL.parent / 'al_curve.png'}")

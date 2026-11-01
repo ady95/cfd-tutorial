@@ -43,6 +43,10 @@ bar.WindowLocation = "Lower Center"
 bar.TitleColor = [0, 0, 0]
 bar.LabelColor = [0, 0, 0]
 bar.RangeLabelFormat = "%.0f"
+bar.TitleFontSize = 36     # 1600px 그림이 책 본문 폭으로 줄어도 읽히게
+bar.LabelFontSize = 32
+bar.ScalarBarThickness = 24
+bar.ScalarBarLength = 0.5
 
 view.ResetCamera()
 pvs.GetActiveCamera().Zoom(3.2)     # 화면 폭에 맞게 확대

@@ -32,7 +32,7 @@ panels = [("input: mask", x_in[0], "gray"), ("input: U / 0.1 m/s", x_in[1],
 panels += [(f"output: {n}", data["fields"][i, c], cmap) for c, (n, cmap) in
            enumerate([("Ux [m/s]", "viridis"), ("Uy [m/s]", "RdBu_r"),
                       ("p [m2/s2]", "cividis"), ("dT [K]", "inferno")])]
-fig, axes = plt.subplots(3, 2, figsize=(14, 6.4), sharex=True, sharey=True)
+fig, axes = plt.subplots(3, 2, figsize=(8, 6.8), sharex=True, sharey=True)
 for ax, (title, f, cmap) in zip(axes.ravel(), panels):
     show = f if title.startswith("input") else np.where(mask > 0, f, np.nan)
     kw = {}

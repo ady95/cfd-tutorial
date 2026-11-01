@@ -87,7 +87,7 @@ i = idx[j]
 m = data["mask"][i].astype(bool)
 nx = m.shape[1]
 x0, x1 = np.searchsorted(np.linspace(0, 80, nx), [40, 72])
-fig, axes = plt.subplots(3, 2, figsize=(14, 6.2), sharex=True, sharey=True)
+fig, axes = plt.subplots(3, 2, figsize=(8, 6.6), sharex=True, sharey=True)
 for col, (c, name, cmap) in enumerate([(3, "dT [K]", "inferno"),
                                        (0, "Ux [m/s]", "viridis")]):
     t, p = data["fields"][i, c], pred["test"][j, c]
@@ -114,7 +114,7 @@ fig.savefig(out / "fno-case.png", dpi=130)
 
 # 그림 2: test 전체의 평균 |오차| 지도 (그 자리가 유체인 케이스만 평균)
 mk = data["mask"][k].astype(bool)
-fig, axes = plt.subplots(2, 1, figsize=(14, 4.6), sharex=True)
+fig, axes = plt.subplots(2, 1, figsize=(8, 4.4), sharex=True)
 for ax, (c, name) in zip(axes, [(3, "|dT error| [K]"),
                                 (0, "|Ux error| [m/s]")]):
     e = np.abs(pred["test"][:, c] - data["fields"][k][:, c])

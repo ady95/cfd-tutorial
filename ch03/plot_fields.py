@@ -38,7 +38,9 @@ for row, (name, cmap, title, fmt) in enumerate(panels):
                 scalar_bar_args={"title": title, "n_labels": 4,
                                  "fmt": fmt, "position_x": 0.3,
                                  "position_y": 0.02, "width": 0.4,
-                                 "height": 0.08, "color": "black"})
+                                 "height": 0.12, "color": "black",
+                                 "title_font_size": 36,
+                                 "label_font_size": 32})
     pl.view_xy()
     pl.camera.tight(padding=0.02, adjust_render_window=False)
     pl.camera.zoom(0.9)     # 아래쪽에 범례 자리를 남긴다
