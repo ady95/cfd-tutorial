@@ -18,6 +18,8 @@ from common import pad
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.ticker import (FuncFormatter, LogLocator,  # noqa: E402
+                               NullFormatter)
 
 AL = Path("~/cfd-runs/ch11/al").expanduser()
 NAMES = {"random": "무작위", "top": "불확실성 상위",
@@ -143,13 +145,17 @@ def loop_part():
     axes[1].set(ylabel="max relative error [%]", xlabel="training cases",
                 title="worst error vs. data")
     axes[2].set(ylabel="mean relative error [%]",
-                xlabel="added CFD time (sum of case times) [min]",
+                xlabel="added CFD time [min]",
                 title="mean error vs. CFD time")
     for ax in axes:
         ax.set(yscale="log")
         ax.grid(alpha=0.3, which="both")
-    axes[0].legend(fontsize=9)
-    fig.tight_layout()
+        ax.yaxis.set_major_locator(LogLocator(subs=(1.0, 2.0, 5.0)))
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+        ax.yaxis.set_minor_formatter(NullFormatter())
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="lower center",
+               ncol=2, fontsize=10, frameon=False)
+    fig.tight_layout(rect=(0, 0.14, 1, 1))
     fig.savefig(AL.parent / "al_curve.png", dpi=150)
     print(f"\n그림: {AL.parent / 'al_curve.png'}")
 

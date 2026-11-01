@@ -43,6 +43,11 @@ pl.add_mesh(
 )
 pl.view_xy()
 pl.camera.zoom(3.0)     # 화면 폭에 맞게 확대
+dy = 0.25 * (view.bounds[3] - view.bounds[2])   # 아래에 색상 막대 자리
+fx, fy, fz = pl.camera.focal_point
+px, py, pz = pl.camera.position
+pl.camera.focal_point = (fx, fy - dy, fz)
+pl.camera.position = (px, py - dy, pz)
 pl.screenshot(out / "channel2d-ux.png")
 
 # 2. 단면별 속도 분포: 입구 구간에서 포물선으로 자라는 모습

@@ -49,7 +49,13 @@ bar.ScalarBarThickness = 24
 bar.ScalarBarLength = 0.5
 
 view.ResetCamera()
-pvs.GetActiveCamera().Zoom(3.2)     # 화면 폭에 맞게 확대
+cam = pvs.GetActiveCamera()
+cam.Zoom(3.2)                       # 화면 폭에 맞게 확대
+b = reader.GetDataInformation().GetBounds()
+dy = 0.3 * (b[3] - b[2])            # 아래에 색상 막대 자리
+fp, pos = cam.GetFocalPoint(), cam.GetPosition()
+cam.SetFocalPoint(fp[0], fp[1] - dy, fp[2])
+cam.SetPosition(pos[0], pos[1] - dy, pos[2])
 pvs.SaveScreenshot(str(out / "pitzDaily-U.png"), view,
                    ImageResolution=[1600, 420])
 print("저장:", out / "pitzDaily-U.png")

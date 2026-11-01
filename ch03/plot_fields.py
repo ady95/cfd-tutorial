@@ -43,7 +43,12 @@ for row, (name, cmap, title, fmt) in enumerate(panels):
                                  "label_font_size": 32})
     pl.view_xy()
     pl.camera.tight(padding=0.02, adjust_render_window=False)
-    pl.camera.zoom(0.9)     # 아래쪽에 범례 자리를 남긴다
+    pl.camera.zoom(0.85)    # 아래쪽에 범례 자리를 남긴다
+    dy = 0.12 * (mesh.bounds[3] - mesh.bounds[2])
+    fx, fy, fz = pl.camera.focal_point
+    px, py, pz = pl.camera.position
+    pl.camera.focal_point = (fx, fy - dy, fz)
+    pl.camera.position = (px, py - dy, pz)
 pl.set_background("white")
 pl.screenshot(out / "fields.png")
 print("저장:", out / "fields.png")
